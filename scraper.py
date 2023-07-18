@@ -3,6 +3,7 @@ import concurrent.futures
 import requests
 from bs4 import BeautifulSoup as BS
 from datetime import datetime
+import time
 
 # Create argument parser
 parser = argparse.ArgumentParser(description='Scrape earnings data for a list of stock symbols.')
@@ -51,6 +52,9 @@ def fetch_earnings(ticker, exchange):
             if 0 <= days_until_earnings <= 30:
                 return (ticker, days_until_earnings, earnings_date, ' '.join(values[1:]))
 
+# Start measuring the execution time
+start_time = time.time()
+
 # Process each ticker using multiprocessing
 with concurrent.futures.ThreadPoolExecutor() as executor:
     # Use concurrent futures to execute fetch_earnings for each ticker and exchange combination
@@ -72,3 +76,9 @@ for ticker_detail in ticker_details:
     print(f"Earnings date is {days_until_earnings} days from today: {earnings_date.strftime('%b. %d, %Y')}")
     print(additional_values)
     print()
+
+# Calculate the elapsed time
+elapsed_time = time.time() - start_time
+
+# Print the elapsed time
+print(f"Execution time: {round(elapsed_time, 3)} seconds")
