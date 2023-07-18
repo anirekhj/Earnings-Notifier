@@ -25,8 +25,8 @@ exchanges_file = "exchanges.txt"
 with open(exchanges_file, 'r') as file:
     exchanges = [line.strip() for line in file]
 
-# Initialize a list to store ticker details
-ticker_details = []
+# Initialize a dictionary to store ticker details for each exchange
+ticker_details = {}
 
 # Define a function to fetch earnings data for a given ticker and exchange
 async def fetch_earnings(session, ticker, exchange):
@@ -61,20 +61,25 @@ async def main():
             for exchange in exchanges:
                 tasks.append(fetch_earnings(client, ticker, exchange))
 
-        ticker_details = await asyncio.gather(*tasks)
+        ticker_results = await asyncio.gather(*tasks)
 
-    # Remove None values and sort the ticker details based on days until earnings in descending order
-    ticker_details = [td for td in ticker_details if td is not None]
-    ticker_details.sort(key=lambda x: x[2], reverse=True)
+    # Store ticker details for each exchange in the dictionary
+    for result in ticker_results:
+        if result is not None:
+            ticker, exchange, days_until_earnings, earnings_date, additional_values = result
+            if ticker in ticker_details:
+                ticker_details[ticker].append((exchange, days_until_earnings, earnings_date, additional_values))
+            else:
+                ticker_details[ticker] = [(exchange, days_until_earnings, earnings_date, additional_values)]
 
     # Print the ticker details
-    for ticker_detail in ticker_details:
-        stock_symbol, exchange, days_until_earnings, earnings_date, additional_values = ticker_detail
-        print(f"Ticker: {stock_symbol}")
-        print(f"Exchange: {exchange}")
-        print(f"Earnings date is {days_until_earnings} days from today: {earnings_date.strftime('%b. %d, %Y')}")
-        print(additional_values)
-        print()
+    for ticker, details in ticker_details.items():
+        print(f"Ticker: {ticker}")
+        for exchange, days_until_earnings, earnings_date, additional_values in details:
+            print(f"  Exchange: {exchange}")
+            print(f"  Earnings date is {days_until_earnings} days from today: {earnings_date.strftime('%b. %d, %Y')}")
+            print(f"  {additional_values}")
+            print()
 
     # Calculate the elapsed time
     elapsed_time = time.time() - start_time
