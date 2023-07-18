@@ -50,12 +50,12 @@ def fetch_earnings(ticker, exchange):
             days_until_earnings = (earnings_date - current_date).days
 
             if 0 <= days_until_earnings <= 30:
-                return (ticker, days_until_earnings, earnings_date, ' '.join(values[1:]))
+                return (ticker, exchange, days_until_earnings, earnings_date, ' '.join(values[1:]))
 
 # Start measuring the execution time
 start_time = time.time()
 
-# Process each ticker using multiprocessing
+# Process each ticker and exchange using multiprocessing
 with concurrent.futures.ThreadPoolExecutor() as executor:
     # Use concurrent futures to execute fetch_earnings for each ticker and exchange combination
     futures = []
@@ -64,15 +64,20 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
             futures.append(executor.submit(fetch_earnings, stock_symbol, exchange))
 
     # Collect the results from completed futures
-    ticker_details = [future.result() for future in concurrent.futures.as_completed(futures) if future.result() is not None]
+    ticker_details = []
+    for future in concurrent.futures.as_completed(futures):
+        result = future.result()
+        if result is not None:
+            ticker_details.append(result)
 
 # Sort the ticker details based on days until earnings in descending order
-ticker_details.sort(key=lambda x: x[1], reverse=True)
+ticker_details.sort(key=lambda x: x[2], reverse=True)
 
 # Print the ticker details
 for ticker_detail in ticker_details:
-    stock_symbol, days_until_earnings, earnings_date, additional_values = ticker_detail
+    stock_symbol, exchange, days_until_earnings, earnings_date, additional_values = ticker_detail
     print(f"Ticker: {stock_symbol}")
+    print(f"Exchange: {exchange}")
     print(f"Earnings date is {days_until_earnings} days from today: {earnings_date.strftime('%b. %d, %Y')}")
     print(additional_values)
     print()
@@ -80,5 +85,5 @@ for ticker_detail in ticker_details:
 # Calculate the elapsed time
 elapsed_time = time.time() - start_time
 
-# Print the elapsed time
+# Print the elapsed time with 3 decimal places
 print(f"Execution time: {round(elapsed_time, 3)} seconds")
