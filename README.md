@@ -15,3 +15,6 @@ python3 earnings_notifier.py
   pip3 install aiohttp_retry
   pip3 install httpx
   ```
+
+tickers.txt contains a list of companies with market cap > USD 10B rated as strong buy.
+List from https://www.nasdaq.com/market-activity/stocks/screener updated as of July 19, 2023.
